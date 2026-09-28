@@ -177,7 +177,7 @@ Row {
                     to : containerRow.mapSource.maximumZoomLevel
                     value : containerRow.mapSource.zoomLevel
                     onValueChanged: {
-                            containerRow.mapSource.zoomLevel = value
+                        containerRow.mapSource.zoomLevel = value
                     }
                 }
                 Slider {

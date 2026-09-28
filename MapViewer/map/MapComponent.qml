@@ -6,10 +6,8 @@ import QtLocation
 import QtPositioning
 import "../helper.js" as Helper
 
-//! [top]
 MapView {
     id: view
-//! [top]
     property variant markers
     property variant mapItems
     property int markerCounter: 0 // counter for total amount of markers. Resets to 0 when number of markers = 0
@@ -20,6 +18,8 @@ MapView {
     property alias routeModel: routeModel
     property alias geocodeModel: geocodeModel
     property alias slidersExpanded: sliders.expanded
+    property bool rightButtonClicked: false
+    property real lastMousePositionX: 0.0
 
     signal showGeocodeInfo()
     signal geocodeFinished()
@@ -136,7 +136,6 @@ MapView {
 
     function calculateCoordinateRoute(startCoordinate, endCoordinate)
     {
-        //! [routerequest0]
         // clear away any old data in the query
         routeQuery.clearWaypoints();
         // add the start and end coords as waypoints on the route
@@ -144,16 +143,11 @@ MapView {
         routeQuery.addWaypoint(endCoordinate)
         routeQuery.travelModes = RouteQuery.CarTravel
         routeQuery.routeOptimizations = RouteQuery.FastestRoute
-        //! [routerequest0]
 
-        //! [routerequest1]
         routeModel.update();
-        //! [routerequest1]
 
-        //! [routerequest2]
         // center the map on the start coord
         view.map.center = startCoordinate;
-        //! [routerequest2]
     }
 
     function geocode(fromAddress)
@@ -166,14 +160,12 @@ MapView {
     }
 
 
-//! [coord]
     map.zoomLevel: (maximumZoomLevel - minimumZoomLevel)/2
     map.center {
         // The Qt Company in Oslo
         latitude: 59.9485
         longitude: 10.7686
     }
-//! [coord]
 
     focus: true
     map.onCopyrightLinkActivated: Qt.openUrlExternally(link)
@@ -329,7 +321,6 @@ MapView {
         }
     }
 
-    //! [routemodel0]
     RouteModel {
         id: routeModel
         plugin : view.map.plugin
@@ -352,9 +343,7 @@ MapView {
             }
         }
     }
-    //! [routemodel0]
 
-    //! [routedelegate0]
     Component {
         id: routeDelegate
 
@@ -365,7 +354,6 @@ MapView {
             line.width: 5
             smooth: true
             opacity: 0.8
-     //! [routedelegate0]
             TapHandler {
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onLongPressed: showRouteMenu(view.map.toCoordinate(tapHandler.point.position))
@@ -377,7 +365,6 @@ MapView {
         }
     }
 
-    //! [geocodemodel0]
     GeocodeModel {
         id: geocodeModel
         plugin: view.map.plugin
@@ -393,9 +380,7 @@ MapView {
             }
         }
     }
-    //! [geocodemodel0]
 
-    //! [pointdel0]
     Component {
         id: pointDelegate
 
@@ -407,7 +392,6 @@ MapView {
             sourceItem: Image {
                 id: pointMarker
                 source: "../resources/marker_blue.png"
-                //! [pointdel0]
 
                 Text{
                     id: pointText
@@ -428,28 +412,22 @@ MapView {
 
             TapHandler {
                 onLongPressed: showPointMenu(point.coordinate)
-            //! [pointdel1]
             }
         }
     }
-    //! [pointdel1]
 
-    //! [routeview0]
     MapItemView {
         parent: view.map
         model: routeModel
         delegate: routeDelegate
-    //! [routeview0]
         autoFitViewport: true
     }
 
-    //! [geocodeview]
     MapItemView {
         parent: view.map
         model: geocodeModel
         delegate: pointDelegate
     }
-    //! [geocodeview]
 
     Timer {
         id: scaleTimer
@@ -491,6 +469,23 @@ MapView {
                                                        view.map.center.longitude - dy);
         }
     }
-//! [end]
+
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.RightButton
+        // hoverEnabled: true
+
+        onPressed: (event) => {
+            if (event.button === Qt.RightButton) {
+                rightButtonClicked = true
+                lastMousePositionX = event.x
+            }
+        }
+
+        onPositionChanged: (event) => {
+            const delta = (event.x - lastMousePositionX) / 2.0
+            lastMousePositionX = event.x
+            view.map.bearing = (view.map.bearing + delta + 360.0) % 360
+        }
+    }
 }
-//! [end]

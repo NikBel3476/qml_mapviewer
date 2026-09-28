@@ -19,7 +19,6 @@ ApplicationWindow {
     //! [routecoordinate]
     property variant fromCoordinate: QtPositioning.coordinate(59.9483, 10.7695)
     property variant toCoordinate: QtPositioning.coordinate(59.9645, 10.671)
-    //! [routecoordinate]
 
     function createMap(provider)
     {
@@ -454,11 +453,6 @@ support"
             onShowRouteMenu: (coordinate) => itemPopupMenu.show("Route",coordinate)
             onShowPointMenu: (coordinate) => itemPopupMenu.show("Point",coordinate)
             onShowRouteList: stackView.showRouteListPage()
-
-            TapHandler {
-                onTapped: {
-                }
-            }
         }
     }
 
