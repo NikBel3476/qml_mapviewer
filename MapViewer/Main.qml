@@ -19,6 +19,15 @@ ApplicationWindow {
     //! [routecoordinate]
     property variant fromCoordinate: QtPositioning.coordinate(59.9483, 10.7695)
     property variant toCoordinate: QtPositioning.coordinate(59.9645, 10.671)
+    property QtObject uav
+
+    Connections {
+        target: appWindow.uav
+
+        function onPos_changed(coordinate) {
+            console.log(`Pos ${coordinate}`)
+        }
+    }
 
     function createMap(provider)
     {
