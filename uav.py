@@ -13,8 +13,8 @@ class Uav(QObject):
     def setPos(self, pos: QtPositioning.QGeoCoordinate):
         if (self.__pos != pos):
             self.__pos = pos
-            self.pos_changed.emit(self.__pos)
+            self.posChanged.emit(self.__pos)
 
-    pos_changed = Signal(QtPositioning.QGeoCoordinate, arguments=['pos'])
+    posChanged = Signal(QtPositioning.QGeoCoordinate, arguments=['pos'])
 
-    value = Property(int, pos, setPos, notify=pos_changed)
+    value = Property(int, pos, setPos, notify=posChanged)

@@ -16,18 +16,23 @@ ApplicationWindow {
     property variant parameters
 
     //defaults
-    //! [routecoordinate]
     property variant fromCoordinate: QtPositioning.coordinate(59.9483, 10.7695)
     property variant toCoordinate: QtPositioning.coordinate(59.9645, 10.671)
     property QtObject uav
 
-    Connections {
-        target: appWindow.uav
-
-        function onPos_changed(coordinate) {
-            console.log(`Pos ${coordinate}`)
+    onUavChanged: {
+        if (mapview) {
+            mapview.setUav(uav)
         }
     }
+
+    // Connections {
+    //     target: appWindow.uav
+
+    //     function onPosChanged(coordinate) {
+    //         console.log(`Pos ${coordinate}`)
+    //     }
+    // }
 
     function createMap(provider)
     {
@@ -56,8 +61,8 @@ ApplicationWindow {
             panelExpanded = mapview.slidersExpanded
             mapview.destroy()
         }
-        mapview = mapComponent.createObject(page);
-        mapview.map.plugin = plugin;
+        mapview = mapComponent.createObject(page)
+        mapview.map.plugin = plugin
 
         if (zoomLevel != null) {
             mapview.map.tilt = tilt
@@ -111,7 +116,6 @@ ApplicationWindow {
     visible: true
     menuBar: mainMenu
 
-    //! [geocode0]
     Address {
         id :fromAddress
         street: "Sandakerveien 116"
@@ -120,7 +124,6 @@ ApplicationWindow {
         state : ""
         postalCode: "0484"
     }
-    //! [geocode0]
 
     Address {
         id: toAddress

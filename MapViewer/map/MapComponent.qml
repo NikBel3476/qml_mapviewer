@@ -18,131 +18,156 @@ MapView {
     property alias routeModel: routeModel
     property alias geocodeModel: geocodeModel
     property alias slidersExpanded: sliders.expanded
-    property bool rightButtonClicked: false
+    property bool rightButtonPressed: false
     property real lastMousePositionX: 0.0
+    property QtObject uav
+    property list<QtObject> missionPoints
 
-    signal showGeocodeInfo()
-    signal geocodeFinished()
-    signal routeError()
+    signal showGeocodeInfo
+    signal geocodeFinished
+    signal routeError
     signal coordinatesCaptured(double latitude, double longitude)
     signal showMainMenu(variant coordinate)
     signal showMarkerMenu(variant coordinate)
     signal showRouteMenu(variant coordinate)
     signal showPointMenu(variant coordinate)
-    signal showRouteList()
+    signal showRouteList
 
-    function geocodeMessage()
-    {
-        var street, district, city, county, state, countryCode, country, postalCode, latitude, longitude, text
-        latitude = Math.round(geocodeModel.get(0).coordinate.latitude * 10000) / 10000
-        longitude =Math.round(geocodeModel.get(0).coordinate.longitude * 10000) / 10000
-        street = geocodeModel.get(0).address.street
-        district = geocodeModel.get(0).address.district
-        city = geocodeModel.get(0).address.city
-        county = geocodeModel.get(0).address.county
-        state = geocodeModel.get(0).address.state
-        countryCode = geocodeModel.get(0).address.countryCode
-        country = geocodeModel.get(0).address.country
-        postalCode = geocodeModel.get(0).address.postalCode
+    Connections {
+        target: uav
 
-        text = "<b>Latitude:</b> " + latitude + "<br/>"
-        text +="<b>Longitude:</b> " + longitude + "<br/>" + "<br/>"
-        if (street) text +="<b>Street: </b>"+ street + " <br/>"
-        if (district) text +="<b>District: </b>"+ district +" <br/>"
-        if (city) text +="<b>City: </b>"+ city + " <br/>"
-        if (county) text +="<b>County: </b>"+ county + " <br/>"
-        if (state) text +="<b>State: </b>"+ state + " <br/>"
-        if (countryCode) text +="<b>Country code: </b>"+ countryCode + " <br/>"
-        if (country) text +="<b>Country: </b>"+ country + " <br/>"
-        if (postalCode) text +="<b>PostalCode: </b>"+ postalCode + " <br/>"
-        return text
+        function onPosChanged(pos) {
+            uavMarker.coordinate = pos
+        }
     }
 
-    function calculateScale()
-    {
-        var coord1, coord2, dist, text, f
-        f = 0
-        coord1 = view.map.toCoordinate(Qt.point(0,scale.y))
-        coord2 = view.map.toCoordinate(Qt.point(0+scaleImage.sourceSize.width,scale.y))
-        dist = Math.round(coord1.distanceTo(coord2))
+    function setUav(uv) {
+        uav = uv
+    }
+
+    function geocodeMessage() {
+        var street, district, city, county, state, countryCode, country, postalCode, latitude, longitude, text;
+        latitude = Math.round(geocodeModel.get(0).coordinate.latitude * 10000) / 10000;
+        longitude = Math.round(geocodeModel.get(0).coordinate.longitude * 10000) / 10000;
+        street = geocodeModel.get(0).address.street;
+        district = geocodeModel.get(0).address.district;
+        city = geocodeModel.get(0).address.city;
+        county = geocodeModel.get(0).address.county;
+        state = geocodeModel.get(0).address.state;
+        countryCode = geocodeModel.get(0).address.countryCode;
+        country = geocodeModel.get(0).address.country;
+        postalCode = geocodeModel.get(0).address.postalCode;
+
+        text = "<b>Latitude:</b> " + latitude + "<br/>";
+        text += "<b>Longitude:</b> " + longitude + "<br/>" + "<br/>";
+        if (street)
+            text += "<b>Street: </b>" + street + " <br/>";
+        if (district)
+            text += "<b>District: </b>" + district + " <br/>";
+        if (city)
+            text += "<b>City: </b>" + city + " <br/>";
+        if (county)
+            text += "<b>County: </b>" + county + " <br/>";
+        if (state)
+            text += "<b>State: </b>" + state + " <br/>";
+        if (countryCode)
+            text += "<b>Country code: </b>" + countryCode + " <br/>";
+        if (country)
+            text += "<b>Country: </b>" + country + " <br/>";
+        if (postalCode)
+            text += "<b>PostalCode: </b>" + postalCode + " <br/>";
+        return text;
+    }
+
+    function calculateScale() {
+        var coord1, coord2, dist, text, f;
+        f = 0;
+        coord1 = view.map.toCoordinate(Qt.point(0, scale.y));
+        coord2 = view.map.toCoordinate(Qt.point(0 + scaleImage.sourceSize.width, scale.y));
+        dist = Math.round(coord1.distanceTo(coord2));
 
         if (dist === 0) {
             // not visible
         } else {
-            for (var i = 0; i < scaleLengths.length-1; i++) {
-                if (dist < (scaleLengths[i] + scaleLengths[i+1]) / 2 ) {
-                    f = scaleLengths[i] / dist
-                    dist = scaleLengths[i]
+            for (var i = 0; i < scaleLengths.length - 1; i++) {
+                if (dist < (scaleLengths[i] + scaleLengths[i + 1]) / 2) {
+                    f = scaleLengths[i] / dist;
+                    dist = scaleLengths[i];
                     break;
                 }
             }
             if (f === 0) {
-                f = dist / scaleLengths[i]
-                dist = scaleLengths[i]
+                f = dist / scaleLengths[i];
+                dist = scaleLengths[i];
             }
         }
 
-        text = Helper.formatDistance(dist)
-        scaleImage.width = (scaleImage.sourceSize.width * f) - 2 * scaleImageLeft.sourceSize.width
-        scaleText.text = text
+        text = Helper.formatDistance(dist);
+        scaleImage.width = (scaleImage.sourceSize.width * f) - 2 * scaleImageLeft.sourceSize.width;
+        scaleText.text = text;
     }
 
-    function deleteMarkers()
-    {
-        var count = view.markers.length
-        for (var i = count-1; i>=0; i--){
-            view.map.removeMapItem(view.markers[i])
+    function deleteMarkers() {
+        var count = view.markers.length;
+        for (var i = count - 1; i >= 0; i--) {
+            view.map.removeMapItem(view.markers[i]);
         }
-        view.markers = []
+        view.markers = [];
     }
 
-    function addMarker()
-    {
-        var count = view.markers.length
-        markerCounter++
-        var marker = Qt.createQmlObject ('Marker {}', map)
-        view.map.addMapItem(marker)
-        marker.z = view.map.z+1
-        marker.coordinate = tapHandler.lastCoordinate
-        markers.push(marker)
+    function addMarker() {
+        var count = view.markers.length;
+        markerCounter++;
+        var marker = Qt.createQmlObject('Marker {}', map);
+        view.map.addMapItem(marker);
+        marker.z = view.map.z + 1;
+        marker.coordinate = tapHandler.lastCoordinate;
+        markers.push(marker);
     }
 
-    function deleteMarker(index)
-    {
+    function addMissionPoint(coordinate) {
+        console.log(`MIS POINT: ${coordinate}`)
+        const marker = Qt.createQmlObject(`Marker { text: '${view.missionPoints.length}'}`, map);
+        view.map.addMapItem(marker);
+        marker.coordinate = coordinate;
+        view.missionPoints.push(marker);
+    }
+
+    function deleteMarker(index) {
         //update list of markers
-        var myArray = []
-        var count = view.markers.length
-        for (var i = 0; i<count; i++){
-            if (index !== i) myArray.push(view.markers[i])
+        var myArray = [];
+        var count = view.markers.length;
+        for (var i = 0; i < count; i++) {
+            if (index !== i)
+                myArray.push(view.markers[i]);
         }
 
-        view.map.removeMapItem(view.markers[index])
-        view.markers[index].destroy()
-        view.markers = myArray
-        if (markers.length === 0) markerCounter = 0
+        view.map.removeMapItem(view.markers[index]);
+        view.markers[index].destroy();
+        view.markers = myArray;
+        if (markers.length === 0)
+            markerCounter = 0;
     }
 
-    function calculateMarkerRoute()
-    {
+    function calculateMarkerRoute() {
         routeQuery.clearWaypoints();
-        for (var i = currentMarker; i< view.markers.length; i++){
-            routeQuery.addWaypoint(markers[i].coordinate)
+        for (var i = currentMarker; i < view.markers.length; i++) {
+            routeQuery.addWaypoint(markers[i].coordinate);
         }
-        routeQuery.travelModes = RouteQuery.CarTravel
-        routeQuery.routeOptimizations = RouteQuery.ShortestRoute
+        routeQuery.travelModes = RouteQuery.CarTravel;
+        routeQuery.routeOptimizations = RouteQuery.ShortestRoute;
 
         routeModel.update();
     }
 
-    function calculateCoordinateRoute(startCoordinate, endCoordinate)
-    {
+    function calculateCoordinateRoute(startCoordinate, endCoordinate) {
         // clear away any old data in the query
         routeQuery.clearWaypoints();
         // add the start and end coords as waypoints on the route
-        routeQuery.addWaypoint(startCoordinate)
-        routeQuery.addWaypoint(endCoordinate)
-        routeQuery.travelModes = RouteQuery.CarTravel
-        routeQuery.routeOptimizations = RouteQuery.FastestRoute
+        routeQuery.addWaypoint(startCoordinate);
+        routeQuery.addWaypoint(endCoordinate);
+        routeQuery.travelModes = RouteQuery.CarTravel;
+        routeQuery.routeOptimizations = RouteQuery.FastestRoute;
 
         routeModel.update();
 
@@ -150,43 +175,40 @@ MapView {
         view.map.center = startCoordinate;
     }
 
-    function geocode(fromAddress)
-    {
-        //! [geocode1]
+    function geocode(fromAddress) {
         // send the geocode request
-        geocodeModel.query = fromAddress
-        geocodeModel.update()
-        //! [geocode1]
+        geocodeModel.query = fromAddress;
+        geocodeModel.update();
     }
 
-
-    map.zoomLevel: (maximumZoomLevel - minimumZoomLevel)/2
+    map.zoomLevel: (maximumZoomLevel - minimumZoomLevel) / 2
     map.center {
-        // The Qt Company in Oslo
-        latitude: 59.9485
-        longitude: 10.7686
+        latitude: 0.0
+        longitude: 0.0
     }
 
     focus: true
     map.onCopyrightLinkActivated: Qt.openUrlExternally(link)
 
-    map.onCenterChanged:{
-        scaleTimer.restart()
+    map.onCenterChanged: {
+        scaleTimer.restart();
         if (view.followme)
-            if (view.map.center != positionSource.position.coordinate) view.followme = false
+            if (view.map.center != positionSource.position.coordinate)
+                view.followme = false;
     }
 
-    map.onZoomLevelChanged:{
-        scaleTimer.restart()
-        if (view.followme) view.map.center = positionSource.position.coordinate
+    map.onZoomLevelChanged: {
+        scaleTimer.restart();
+        if (view.followme)
+            view.map.center = positionSource.position.coordinate;
     }
 
-    onWidthChanged:{
-        scaleTimer.restart()
+    onWidthChanged: {
+        scaleTimer.restart();
     }
 
-    onHeightChanged:{
-        scaleTimer.restart()
+    onHeightChanged: {
+        scaleTimer.restart();
     }
 
     Component.onCompleted: {
@@ -194,23 +216,28 @@ MapView {
         mapItems = [];
     }
 
-    Keys.onPressed: (event) => {
+    Keys.onPressed: event => {
         if (event.key === Qt.Key_Plus) {
             view.map.zoomLevel++;
         } else if (event.key === Qt.Key_Minus) {
             view.map.zoomLevel--;
-        } else if (event.key === Qt.Key_Left || event.key === Qt.Key_Right ||
-                   event.key === Qt.Key_Up   || event.key === Qt.Key_Down) {
+        } else if (event.key === Qt.Key_Left || event.key === Qt.Key_Right || event.key === Qt.Key_Up || event.key === Qt.Key_Down) {
             var dx = 0;
             var dy = 0;
 
             switch (event.key) {
-
-            case Qt.Key_Left: dx = view.map.width / 4; break;
-            case Qt.Key_Right: dx = -view.map.width / 4; break;
-            case Qt.Key_Up: dy = view.map.height / 4; break;
-            case Qt.Key_Down: dy = -view.map.height / 4; break;
-
+            case Qt.Key_Left:
+                dx = view.map.width / 4;
+                break;
+            case Qt.Key_Right:
+                dx = -view.map.width / 4;
+                break;
+            case Qt.Key_Up:
+                dy = view.map.height / 4;
+                break;
+            case Qt.Key_Down:
+                dy = -view.map.height / 4;
+                break;
             }
 
             var mapCenterPoint = Qt.point(view.map.width / 2.0 - dx, view.map.height / 2.0 - dy);
@@ -218,29 +245,38 @@ MapView {
         }
     }
 
-    PositionSource{
+    PositionSource {
         id: positionSource
         active: followme
 
         onPositionChanged: {
-            view.map.center = positionSource.position.coordinate
+            view.map.center = positionSource.position.coordinate;
         }
     }
 
     MapQuickItem {
         id: mePoisition
         parent: view.map
-        sourceItem: Rectangle { width: 14; height: 14; color: "#251ee4"; border.width: 2; border.color: "white"; smooth: true; radius: 7 }
+        sourceItem: Rectangle {
+            width: 14
+            height: 14
+            color: "#251ee4"
+            border.width: 2
+            border.color: "white"
+            smooth: true
+            radius: 7
+        }
         coordinate: positionSource.position.coordinate
         opacity: 1.0
-        anchorPoint: Qt.point(sourceItem.width/2, sourceItem.height/2)
+        anchorPoint: Qt.point(sourceItem.width / 2, sourceItem.height / 2)
         visible: followme
     }
+
     MapQuickItem {
         parent: view.map
-        sourceItem: Text{
+        sourceItem: Text {
             text: qsTr("You're here!")
-            color:"#242424"
+            color: "#242424"
             font.bold: true
             styleColor: "#ECECEC"
             style: Text.Outline
@@ -251,28 +287,37 @@ MapView {
     }
 
     MapQuickItem {
-        id: poiTheQtCompany
+        id: uavMarker
         parent: view.map
-        sourceItem: Rectangle { width: 14; height: 14; color: "#e41e25"; border.width: 2; border.color: "white"; smooth: true; radius: 7 }
+        sourceItem: Rectangle {
+            width: 14
+            height: 14
+            color: "#e41e25"
+            border.width: 2
+            border.color: "white"
+            smooth: true
+            radius: 7
+        }
         coordinate {
-            latitude: 59.9485
-            longitude: 10.7686
+            latitude: 0.0
+            longitude: 0.0
         }
         opacity: 1.0
-        anchorPoint: Qt.point(sourceItem.width/2, sourceItem.height/2)
+        anchorPoint: Qt.point(sourceItem.width / 2, sourceItem.height / 2)
     }
 
     MapQuickItem {
+        id: uavMarkerLabel
         parent: view.map
-        sourceItem: Text{
-            text: "The Qt Company"
-            color:"#242424"
+        sourceItem: Text {
+            text: "uav"
+            color: "#242424"
             font.bold: true
             styleColor: "#ECECEC"
             style: Text.Outline
         }
-        coordinate: poiTheQtCompany.coordinate
-        anchorPoint: Qt.point(-poiTheQtCompany.sourceItem.width * 0.5, poiTheQtCompany.sourceItem.height * 1.5)
+        coordinate: uavMarker.coordinate
+        anchorPoint: Qt.point(-uavMarker.sourceItem.width * 0.5, uavMarker.sourceItem.height * 1.5)
     }
 
     MapSliders {
@@ -286,7 +331,7 @@ MapView {
         id: scale
         z: view.map.z + 3
         visible: scaleText.text !== "0 m"
-        anchors.bottom: parent.bottom;
+        anchors.bottom: parent.bottom
         anchors.right: parent.right
         anchors.margins: 20
         height: scaleText.height * 2
@@ -323,8 +368,8 @@ MapView {
 
     RouteModel {
         id: routeModel
-        plugin : view.map.plugin
-        query:  RouteQuery {
+        plugin: view.map.plugin
+        query: RouteQuery {
             id: routeQuery
         }
         onStatusChanged: {
@@ -332,14 +377,14 @@ MapView {
                 switch (count) {
                 case 0:
                     // technically not an error
-                    view.routeError()
-                    break
+                    view.routeError();
+                    break;
                 case 1:
-                    view.showRouteList()
-                    break
+                    view.showRouteList();
+                    break;
                 }
             } else if (status == RouteModel.Error) {
-                view.routeError()
+                view.routeError();
             }
         }
     }
@@ -359,7 +404,7 @@ MapView {
                 onLongPressed: showRouteMenu(view.map.toCoordinate(tapHandler.point.position))
                 onSingleTapped: (eventPoint, button) => {
                     if (button === Qt.RightButton)
-                        showRouteMenu(view.map.toCoordinate(tapHandler.point.position))
+                        showRouteMenu(view.map.toCoordinate(tapHandler.point.position));
                 }
             }
         }
@@ -370,13 +415,12 @@ MapView {
         plugin: view.map.plugin
         onStatusChanged: {
             if ((status == GeocodeModel.Ready) || (status == GeocodeModel.Error))
-                view.geocodeFinished()
+                view.geocodeFinished();
         }
-        onLocationsChanged:
-        {
+        onLocationsChanged: {
             if (count === 1) {
-                view.map.center.latitude = get(0).coordinate.latitude
-                view.map.center.longitude = get(0).coordinate.longitude
+                view.map.center.latitude = get(0).coordinate.latitude;
+                view.map.center.longitude = get(0).coordinate.longitude;
             }
         }
     }
@@ -393,21 +437,20 @@ MapView {
                 id: pointMarker
                 source: "../resources/marker_blue.png"
 
-                Text{
+                Text {
                     id: pointText
                     anchors.bottom: pointMarker.top
                     anchors.horizontalCenter: pointMarker.horizontalCenter
                     text: locationData.address.street + ", " + locationData.address.city
-                    color:"#242424"
+                    color: "#242424"
                     font.bold: true
                     styleColor: "#ECECEC"
                     style: Text.Outline
                 }
-
             }
             smooth: true
             autoFadeIn: false
-            anchorPoint.x: pointMarker.width/4
+            anchorPoint.x: pointMarker.width / 4
             anchorPoint.y: pointMarker.height
 
             TapHandler {
@@ -444,48 +487,73 @@ MapView {
 
         onPressedChanged: (eventPoint, button) => {
             if (pressed) {
-                lastCoordinate = view.map.toCoordinate(tapHandler.point.position)
+                lastCoordinate = view.map.toCoordinate(tapHandler.point.position);
             }
         }
 
         onSingleTapped: (eventPoint, button) => {
-                if (button === Qt.RightButton) {
-                    showMainMenu(lastCoordinate)
-                }
+            if (button === Qt.RightButton) {
+                showMainMenu(lastCoordinate);
+            }
         }
 
         onDoubleTapped: (eventPoint, button) => {
             var preZoomPoint = view.map.toCoordinate(eventPoint.position);
             if (button === Qt.LeftButton) {
-                view.map.zoomLevel = Math.floor(view.map.zoomLevel + 1)
+                view.map.zoomLevel = Math.floor(view.map.zoomLevel + 1);
             } else if (button === Qt.RightButton) {
-                view.map.zoomLevel = Math.floor(view.map.zoomLevel - 1)
+                view.map.zoomLevel = Math.floor(view.map.zoomLevel - 1);
             }
             var postZoomPoint = view.map.toCoordinate(eventPoint.position);
             var dx = postZoomPoint.latitude - preZoomPoint.latitude;
             var dy = postZoomPoint.longitude - preZoomPoint.longitude;
 
-            view.map.center = QtPositioning.coordinate(view.map.center.latitude - dx,
-                                                       view.map.center.longitude - dy);
+            view.map.center = QtPositioning.coordinate(view.map.center.latitude - dx, view.map.center.longitude - dy);
         }
     }
 
     MouseArea {
+        id: mouseArea
         anchors.fill: parent
-        acceptedButtons: Qt.RightButton
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
         // hoverEnabled: true
 
-        onPressed: (event) => {
-            if (event.button === Qt.RightButton) {
-                rightButtonClicked = true
-                lastMousePositionX = event.x
+        onPressed: event => {
+            switch (event.button) {
+                case Qt.RightButton: {
+                    rightButtonPressed = true
+                    lastMousePositionX = event.x
+                    break;
+                }
             }
         }
 
-        onPositionChanged: (event) => {
-            const delta = (event.x - lastMousePositionX) / 2.0
-            lastMousePositionX = event.x
-            view.map.bearing = (view.map.bearing + delta + 360.0) % 360
+        onReleased: event => {
+            switch (event.button) {
+                case Qt.RightButton: {
+                    rightButtonPressed = false
+                    break;
+                }
+            }
+        }
+
+        onClicked: event => {
+            switch (event.button) {
+                case Qt.LeftButton: {
+                    if (event.modifiers === Qt.ControlModifier) {
+                        addMissionPoint(view.map.toCoordinate(Qt.point(event.x, event.y)))
+                    }
+                    break;
+                }
+            }
+        }
+
+        onPositionChanged: event => {
+            if (rightButtonPressed) {
+                const delta = (event.x - lastMousePositionX) / 2.0;
+                lastMousePositionX = event.x;
+                view.map.bearing = (view.map.bearing + delta + 360.0) % 360;
+            }
         }
     }
 }

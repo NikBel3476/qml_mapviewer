@@ -4,18 +4,17 @@
 import QtQuick
 import QtLocation
 
-//! [mqi-top]
 MapQuickItem {
     id: marker
-//! [mqi-top]
+    property string text: ''
 
-//! [mqi-anchor]
     anchorPoint.x: image.width/4
     anchorPoint.y: image.height
 
     HoverHandler {
         id: hoverHandler
     }
+
     TapHandler {
         id: tapHandler
         acceptedButtons: Qt.RightButton
@@ -31,6 +30,7 @@ MapQuickItem {
             mapview.showMarkerMenu(marker.coordinate)
         }
     }
+
     DragHandler {
         id: dragHandler
         grabPermissions: PointerHandler.CanTakeOverFromItems | PointerHandler.CanTakeOverFromHandlersOfDifferentType
@@ -38,11 +38,10 @@ MapQuickItem {
 
     sourceItem: Image {
         id: image
-//! [mqi-anchor]
         source: "../resources/marker.png"
         opacity: hoverHandler.hovered ? 0.6 : 1.0
 
-        Text{
+        Text {
             id: number
             y: image.height/10
             width: image.width
@@ -51,14 +50,8 @@ MapQuickItem {
             font.pixelSize: 14
             horizontalAlignment: Text.AlignHCenter
             Component.onCompleted: {
-                text = mapview.markerCounter
+                text = marker.text === '' ? mapview.markerCounter : marker.text
             }
         }
-
-//! [mqi-closeimage]
     }
-//! [mqi-closeimage]
-
-//! [mqi-close]
 }
-//! [mqi-close]
