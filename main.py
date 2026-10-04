@@ -1,6 +1,5 @@
 # Copyright (C) 2023 The Qt Company Ltd.
 # SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
-from __future__ import annotations
 
 """PySide6 port of the location/mapviewer example from Qt v6.x"""
 
@@ -14,9 +13,11 @@ from pathlib import Path
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtNetwork import QSslSocket
-from PySide6.QtCore import QCoreApplication, QMetaObject, Q_ARG, QTimer
+from PySide6.QtCore import QCoreApplication, QMetaObject, Q_ARG, QTimer, QObject
 from PySide6 import QtPositioning
 import uav
+from gcs.gcs import GCS
+from gcs.MissionModel import MissionModel
 
 IS_TEST = False
 HOST = '127.0.0.1'
@@ -108,15 +109,13 @@ if __name__ == "__main__":
         sys.exit(-1)
 
     root_item = items[0]
+    gcs = GCS(root_item)
     QMetaObject.invokeMethod(root_item, "initializeProviders",
                              Q_ARG("QVariant", parameters))
     root_item.setProperty('uav', uv)
 
-    uv.setPos(QtPositioning.QGeoCoordinate(56.852586, 53.182805, 100.0))
-
     stopEvent = threading.Event()
     thread = threading.Thread(target=run_tcp_client, args=(stopEvent, HOST, PORT, uv))
-
     thread.start()
 
     if IS_TEST:
@@ -136,7 +135,7 @@ if __name__ == "__main__":
         pos_update_timer.start()
 
     exit_code = application.exec()
-    del engine
     stopEvent.set()
     thread.join()
+    del engine
     sys.exit(exit_code)

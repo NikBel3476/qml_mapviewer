@@ -4,6 +4,11 @@
 ```bash
 python -m pip install pyside6
 ```
+or
+```bash
+python -m pip install . --only-deps
+```
+if you have pip 26.2 or above
 
 **Run application**
 ```bash

@@ -1,0 +1,7 @@
+[project]
+name = "GCS"
+version = "0.0.0"
+readme = "README.md"
+dependencies = [
+  "pyside6==6.11.2"
+]

@@ -5,6 +5,7 @@ import QtQuick.Controls
 import QtLocation
 import QtPositioning
 import "../helper.js" as Helper
+import MissionModel
 
 MapView {
     id: view
@@ -32,12 +33,25 @@ MapView {
     signal showRouteMenu(variant coordinate)
     signal showPointMenu(variant coordinate)
     signal showRouteList
+    signal missionPointAdded(variant coordinate)
 
     Connections {
         target: uav
 
         function onPosChanged(pos) {
             uavMarker.coordinate = pos
+        }
+    }
+
+    Connections {
+        target: missionModel
+
+        function onMissionItemAdded(missionItem) {
+            addMissionPoint(missionItem.coordinates())
+        }
+
+        function onMissionItemsChanged(missionItems) {
+            // console.log(missionItems)
         }
     }
 
@@ -126,7 +140,6 @@ MapView {
     }
 
     function addMissionPoint(coordinate) {
-        console.log(`MIS POINT: ${coordinate}`)
         const marker = Qt.createQmlObject(`Marker { text: '${view.missionPoints.length}'}`, map);
         view.map.addMapItem(marker);
         marker.coordinate = coordinate;
@@ -243,6 +256,10 @@ MapView {
             var mapCenterPoint = Qt.point(view.map.width / 2.0 - dx, view.map.height / 2.0 - dy);
             view.map.center = view.map.toCoordinate(mapCenterPoint);
         }
+    }
+
+    MissionModel {
+        id: missionModel
     }
 
     PositionSource {
@@ -538,11 +555,18 @@ MapView {
         }
 
         onClicked: event => {
+            const coordinate = view.map.toCoordinate(Qt.point(event.x, event.y))
             switch (event.button) {
                 case Qt.LeftButton: {
                     if (event.modifiers === Qt.ControlModifier) {
-                        addMissionPoint(view.map.toCoordinate(Qt.point(event.x, event.y)))
+                        // addMissionPoint(coordinate)
+                        // missionPointAdded(coordinate)
+                        missionModel.addNextPoint(coordinate)
                     }
+                    break;
+                }
+                case Qt.RightButton: {
+                    showMainMenu(coordinate);
                     break;
                 }
             }
