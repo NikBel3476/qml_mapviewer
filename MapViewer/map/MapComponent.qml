@@ -337,6 +337,42 @@ MapView {
         anchorPoint: Qt.point(-uavMarker.sourceItem.width * 0.5, uavMarker.sourceItem.height * 1.5)
     }
 
+    MapQuickItem {
+        id: uavMarker
+        parent: view.map
+        visible: false
+        sourceItem: Rectangle {
+            width: 14
+            height: 14
+            color: "#e41e25"
+            border.width: 2
+            border.color: "white"
+            smooth: true
+            radius: 7
+        }
+        coordinate {
+            latitude: 0.0
+            longitude: 0.0
+        }
+        opacity: 1.0
+        anchorPoint: Qt.point(view.sourceItem.width / 2, view.sourceItem.height / 2)
+    }
+
+    MapQuickItem {
+        id: uavMarkerLabel
+        parent: view.map
+        visible: uavMarker.visible
+        sourceItem: Text {
+            text: "uav"
+            color: "#242424"
+            font.bold: true
+            styleColor: "#ECECEC"
+            style: Text.Outline
+        }
+        coordinate: uavMarker.coordinate
+        anchorPoint: Qt.point(-poiTheQtCompany.sourceItem.width * 0.5, poiTheQtCompany.sourceItem.height * 1.5)
+    }
+
     MapSliders {
         id: sliders
         z: view.map.z + 3
@@ -578,6 +614,15 @@ MapView {
                 lastMousePositionX = event.x;
                 view.map.bearing = (view.map.bearing + delta + 360.0) % 360;
             }
+        }
+
+        onPositionChanged: event => {
+            let delta = (event.x - view.lastMousePositionX) / 2.0;
+            if (event.y < view.height / 2.0) {
+                delta = -delta
+            }
+            view.lastMousePositionX = event.x;
+            view.map.bearing = (view.map.bearing + delta + 360.0) % 360;
         }
     }
 }

@@ -53,8 +53,8 @@ def run_tcp_client(stopEvent: threading.Event, host: str, port: int, uv: uav.Uav
         except socket.error as e:
             print(f"Socket error occurred: {e}")
 
-def parseArgs(args):
-    parameters = {}
+def parseArgs(args: list[str]) -> dict[str, bool | str]:
+    parameters: dict[str, bool | str] = {}
     while args:
         param = args[0]
         args = args[1:]
@@ -135,7 +135,7 @@ if __name__ == "__main__":
         pos_update_timer.start()
 
     exit_code = application.exec()
+    del engine
     stopEvent.set()
     thread.join()
-    del engine
     sys.exit(exit_code)
