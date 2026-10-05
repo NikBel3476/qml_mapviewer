@@ -19,8 +19,6 @@ MapView {
     property alias routeModel: routeModel
     property alias geocodeModel: geocodeModel
     property alias slidersExpanded: sliders.expanded
-    property bool rightButtonPressed: false
-    property real lastMousePositionX: 0.0
     property QtObject uav
     property list<QtObject> missionPoints
 
@@ -129,37 +127,36 @@ MapView {
         view.markers = [];
     }
 
-    function addMarker() {
-        var count = view.markers.length;
-        markerCounter++;
-        var marker = Qt.createQmlObject('Marker {}', map);
-        view.map.addMapItem(marker);
-        marker.z = view.map.z + 1;
-        marker.coordinate = tapHandler.lastCoordinate;
-        markers.push(marker);
+    function addMarker(coordinate) {
+        markerCounter++
+        const marker = Qt.createQmlObject('Marker {}', map)
+        view.map.addMapItem(marker)
+        marker.z = view.map.z + 1
+        marker.coordinate = coordinate
+        markers.push(marker)
     }
 
     function addMissionPoint(coordinate) {
-        const marker = Qt.createQmlObject(`Marker { text: '${view.missionPoints.length}'}`, map);
-        view.map.addMapItem(marker);
-        marker.coordinate = coordinate;
-        view.missionPoints.push(marker);
+        const marker = Qt.createQmlObject(`Marker { text: '${view.missionPoints.length}'}`, map)
+        view.map.addMapItem(marker)
+        marker.coordinate = coordinate
+        marker.z = view.map.z + 1
+        view.missionPoints.push(marker)
+        markerCounter++
+        view.markers.push(marker)
     }
 
-    function deleteMarker(index) {
-        //update list of markers
-        var myArray = [];
-        var count = view.markers.length;
-        for (var i = 0; i < count; i++) {
-            if (index !== i)
-                myArray.push(view.markers[i]);
-        }
+    function deleteMarker(markerToDelete) {
+        const filteredMarkers = view.markers.filter(marker => marker != markerToDelete)
+        const newMissionPoints = view.missionPoints.filter(missionPoint => missionPoint != markerToDelete)
 
-        view.map.removeMapItem(view.markers[index]);
-        view.markers[index].destroy();
-        view.markers = myArray;
-        if (markers.length === 0)
+        view.map.removeMapItem(markerToDelete)
+        markerToDelete.destroy()
+        view.markers = filteredMarkers
+        view.missionPoints = newMissionPoints
+        if (markers.length === 0) {
             markerCounter = 0;
+        }
     }
 
     function calculateMarkerRoute() {
@@ -497,43 +494,48 @@ MapView {
         onTriggered: view.calculateScale()
     }
 
-    TapHandler {
-        id: tapHandler
-        property variant lastCoordinate
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
+    // TapHandler {
+    //     id: tapHandler
+    //     property variant lastCoordinate
+    //     acceptedButtons: Qt.LeftButton | Qt.RightButton
 
-        onPressedChanged: (eventPoint, button) => {
-            if (pressed) {
-                lastCoordinate = view.map.toCoordinate(tapHandler.point.position);
-            }
-        }
+    //     onPressedChanged: (eventPoint, button) => {
+    //         if (pressed) {
+    //             lastCoordinate = view.map.toCoordinate(tapHandler.point.position);
+    //         }
+    //     }
 
-        onSingleTapped: (eventPoint, button) => {
-            if (button === Qt.RightButton) {
-                showMainMenu(lastCoordinate);
-            }
-        }
+    //     onSingleTapped: (eventPoint, button) => {
+    //         if (button === Qt.RightButton) {
+    //             showMainMenu(lastCoordinate);
+    //         }
+    //     }
 
-        onDoubleTapped: (eventPoint, button) => {
-            var preZoomPoint = view.map.toCoordinate(eventPoint.position);
-            if (button === Qt.LeftButton) {
-                view.map.zoomLevel = Math.floor(view.map.zoomLevel + 1);
-            } else if (button === Qt.RightButton) {
-                view.map.zoomLevel = Math.floor(view.map.zoomLevel - 1);
-            }
-            var postZoomPoint = view.map.toCoordinate(eventPoint.position);
-            var dx = postZoomPoint.latitude - preZoomPoint.latitude;
-            var dy = postZoomPoint.longitude - preZoomPoint.longitude;
+    //     onDoubleTapped: (eventPoint, button) => {
+    //         var preZoomPoint = view.map.toCoordinate(eventPoint.position);
+    //         if (button === Qt.LeftButton) {
+    //             view.map.zoomLevel = Math.floor(view.map.zoomLevel + 1);
+    //         } else if (button === Qt.RightButton) {
+    //             view.map.zoomLevel = Math.floor(view.map.zoomLevel - 1);
+    //         }
+    //         var postZoomPoint = view.map.toCoordinate(eventPoint.position);
+    //         var dx = postZoomPoint.latitude - preZoomPoint.latitude;
+    //         var dy = postZoomPoint.longitude - preZoomPoint.longitude;
 
-            view.map.center = QtPositioning.coordinate(view.map.center.latitude - dx, view.map.center.longitude - dy);
-        }
-    }
+    //         view.map.center = QtPositioning.coordinate(view.map.center.latitude - dx, view.map.center.longitude - dy);
+    //     }
+    // }
 
     MouseArea {
         id: mouseArea
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         // hoverEnabled: true
+        propagateComposedEvents: true
+
+        property bool rightButtonPressed: false
+        property real lastMousePositionX: 0.0
+        property bool isMapRotation: false
 
         onPressed: event => {
             switch (event.button) {
@@ -555,18 +557,21 @@ MapView {
         }
 
         onClicked: event => {
+            // propagate for marker handlers
+            event.accepted = false
             const coordinate = view.map.toCoordinate(Qt.point(event.x, event.y))
             switch (event.button) {
                 case Qt.LeftButton: {
                     if (event.modifiers === Qt.ControlModifier) {
-                        // addMissionPoint(coordinate)
-                        // missionPointAdded(coordinate)
                         missionModel.addNextPoint(coordinate)
                     }
                     break;
                 }
                 case Qt.RightButton: {
-                    showMainMenu(coordinate);
+                    if (!isMapRotation) {
+                        showMainMenu(coordinate);
+                    }
+                    isMapRotation = false
                     break;
                 }
             }
@@ -574,7 +579,11 @@ MapView {
 
         onPositionChanged: event => {
             if (rightButtonPressed) {
-                const delta = (event.x - lastMousePositionX) / 2.0;
+                isMapRotation = true
+                let delta = (event.x - lastMousePositionX) / 2.0;
+                if (event.y < view.height / 2.0) {
+                    delta = -delta
+                }
                 lastMousePositionX = event.x;
                 view.map.bearing = (view.map.bearing + delta + 360.0) % 360;
             }

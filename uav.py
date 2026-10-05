@@ -1,6 +1,11 @@
-from PySide6.QtCore import QObject, Property, Signal
+from PySide6.QtCore import QObject, Property, Signal, Slot
+from PySide6.QtQml import QmlElement
 from PySide6 import QtPositioning
 
+QML_IMPORT_NAME = 'Uav'
+QML_IMPORT_MAJOR_VERSION = 1
+
+@QmlElement
 class Uav(QObject):
     __pos: QtPositioning.QGeoCoordinate = QtPositioning.QGeoCoordinate(latitude=0.0, longitude=0.0, altitude=0.0)
 

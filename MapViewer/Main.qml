@@ -264,7 +264,7 @@ ApplicationWindow {
             stackView.pop(page)
             switch (item) {
             case "addMarker":
-                mapview.addMarker()
+                mapview.addMarker(mapPopupMenu.coordinate)
                 break
             case "getCoordinate":
                 mapview.coordinatesCaptured(coordinate.latitude, coordinate.longitude)
@@ -312,7 +312,7 @@ ApplicationWindow {
             stackView.pop(page)
             switch (item) {
             case "deleteMarker":
-                mapview.deleteMarker(mapview.currentMarker)
+                mapview.deleteMarker(mapview.markers[mapview.currentMarker])
                 break;
             case "getMarkerCoordinate":
                 mapview.coordinatesCaptured(mapview.markers[mapview.currentMarker].coordinate.latitude,
@@ -432,7 +432,7 @@ support"
                 var text = "<b>" + qsTr("Latitude:") + "</b> " + Helper.roundNumber(latitude,4) + "<br/><b>" + qsTr("Longitude:") + "</b> " + Helper.roundNumber(longitude,4)
                 stackView.showMessage(qsTr("Coordinates"),text);
             }
-            onGeocodeFinished:{
+            onGeocodeFinished: {
                 if (geocodeModel.status == GeocodeModel.Ready) {
                     if (geocodeModel.count == 0) {
                         stackView.showMessage(qsTr("Geocode Error"),qsTr("Unsuccessful geocode"))
