@@ -264,7 +264,7 @@ ApplicationWindow {
             stackView.pop(page)
             switch (item) {
             case "addMarker":
-                mapview.addMarker()
+                mapview.addMarker(mapPopupMenu.coordinate)
                 break
             case "getCoordinate":
                 mapview.coordinatesCaptured(coordinate.latitude, coordinate.longitude)
@@ -312,7 +312,7 @@ ApplicationWindow {
             stackView.pop(page)
             switch (item) {
             case "deleteMarker":
-                mapview.deleteMarker(mapview.currentMarker)
+                mapview.deleteMarker(mapview.markers[mapview.currentMarker])
                 break;
             case "getMarkerCoordinate":
                 mapview.coordinatesCaptured(mapview.markers[mapview.currentMarker].coordinate.latitude,

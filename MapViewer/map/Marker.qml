@@ -15,19 +15,42 @@ MapQuickItem {
         id: hoverHandler
     }
 
-    TapHandler {
-        id: tapHandler
+    // TapHandler {
+    //     id: tapHandler
+    //     acceptedButtons: Qt.RightButton
+    //     gesturePolicy: TapHandler.WithinBounds
+    //     onTapped: {
+    //         mapview.currentMarker = -1
+    //         for (var i = 0; i< mapview.markers.length; i++){
+    //             if (marker == mapview.markers[i]){
+    //                 mapview.currentMarker = i
+    //                 break
+    //             }
+    //         }
+    //         mapview.showMarkerMenu(marker.coordinate)
+    //     }
+    // }
+
+    MouseArea {
+        id: mouseArea
+        anchors.fill: parent
         acceptedButtons: Qt.RightButton
-        gesturePolicy: TapHandler.WithinBounds
-        onTapped: {
-            mapview.currentMarker = -1
-            for (var i = 0; i< mapview.markers.length; i++){
-                if (marker == mapview.markers[i]){
-                    mapview.currentMarker = i
-                    break
+        // hoverEnabled: true
+
+        onClicked: event => {
+            switch (event.button) {
+                case Qt.RightButton: {
+                    mapview.currentMarker = -1
+                    for (var i = 0; i < mapview.markers.length; i++){
+                        if (marker == mapview.markers[i]){
+                            mapview.currentMarker = i
+                            break
+                        }
+                    }
+                    mapview.showMarkerMenu(marker.coordinate)
+                    break;
                 }
             }
-            mapview.showMarkerMenu(marker.coordinate)
         }
     }
 
