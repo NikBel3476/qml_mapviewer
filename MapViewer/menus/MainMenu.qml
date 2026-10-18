@@ -16,8 +16,9 @@ MenuBar {
 
     signal selectProvider(string providerName)
     signal selectMapType(variant mapType)
-    signal selectTool(string tool);
+    signal selectTool(string tool)
     signal toggleMapState(string state)
+    signal uploadMission()
 
     function clearMenu(menu)
     {
@@ -117,6 +118,10 @@ MenuBar {
         MenuItem {
             text: qsTr("Clear Map Data")
             onTriggered: selectTool("Clear")
+        }
+        MenuItem {
+            text: qsTr("Upload mission")
+            onTriggered: uploadMission()
         }
     }
 }

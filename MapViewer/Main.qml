@@ -20,19 +20,13 @@ ApplicationWindow {
     property variant toCoordinate: QtPositioning.coordinate(59.9645, 10.671)
     property QtObject uav
 
+    signal uploadMission()
+
     onUavChanged: {
         if (mapview) {
             mapview.setUav(uav)
         }
     }
-
-    // Connections {
-    //     target: appWindow.uav
-
-    //     function onPosChanged(coordinate) {
-    //         console.log(`Pos ${coordinate}`)
-    //     }
-    // }
 
     function createMap(provider)
     {
@@ -246,6 +240,8 @@ ApplicationWindow {
                 console.log("Unsupported operation")
             }
         }
+
+        onUploadMission: appWindow.uploadMission()
     }
 
     MapPopupMenu {

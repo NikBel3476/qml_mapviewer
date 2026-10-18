@@ -15,10 +15,13 @@ class MissionModel(QObject):
     # CoordinatesRole = Qt.ItemDataRole.UserRole + 1
     __mission_items: list[MissionItem] = []
 
+    # FIXME: if define type as list[MissionItem] qt meta object system breaks
+    missionItemsChanged = Signal(list, arguments=['missionItems'])
+    missionItemAdded = Signal(MissionItem, arguments=['missionItem'])
+
     def __init__(self):
         super().__init__()
-
-        self.missionItemAdded.connect(lambda: self.missionItemsChanged.emit(self.__mission_items))
+        # self.missionItemAdded.connect(lambda: self.missionItemsChanged.emit(self.__mission_items))
 
     # def rowCount(self, parent: QModelIndex | QPersistentModelIndex=QModelIndex()) -> int:
     #     return len(self.__mission_points)
@@ -77,10 +80,7 @@ class MissionModel(QObject):
         print(f'Add next point: {new_mission_item}')
         self.__mission_items.append(new_mission_item)
         self.missionItemAdded.emit(new_mission_item)
-
-    # FIXME: if define type as list[MissionItem] qt meta object system breaks
-    missionItemsChanged = Signal(list, arguments=['missionItems'])
-    missionItemAdded = Signal(MissionItem, arguments=['missionItem'])
+        self.missionItemsChanged.emit(self.__mission_items)
 
     # @Slot(int, int, result=bool)
     # def move(self, source: int, target: int):

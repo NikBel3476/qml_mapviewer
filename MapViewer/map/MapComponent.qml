@@ -21,6 +21,7 @@ MapView {
     property alias slidersExpanded: sliders.expanded
     property QtObject uav
     property list<QtObject> missionPoints
+    property MissionModel missionModel
 
     signal showGeocodeInfo
     signal geocodeFinished
@@ -31,7 +32,7 @@ MapView {
     signal showRouteMenu(variant coordinate)
     signal showPointMenu(variant coordinate)
     signal showRouteList
-    signal missionPointAdded(variant coordinate)
+    // signal missionPointAdded(variant coordinate)
 
     Connections {
         target: uav
@@ -253,10 +254,6 @@ MapView {
             var mapCenterPoint = Qt.point(view.map.width / 2.0 - dx, view.map.height / 2.0 - dy);
             view.map.center = view.map.toCoordinate(mapCenterPoint);
         }
-    }
-
-    MissionModel {
-        id: missionModel
     }
 
     PositionSource {
@@ -563,7 +560,7 @@ MapView {
             switch (event.button) {
                 case Qt.LeftButton: {
                     if (event.modifiers === Qt.ControlModifier) {
-                        missionModel.addNextPoint(coordinate)
+                        view.missionModel.addNextPoint(coordinate)
                     }
                     break;
                 }

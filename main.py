@@ -10,13 +10,13 @@ import mavlink
 import threading
 import random
 from pathlib import Path
-from PySide6.QtQml import QQmlApplicationEngine
+from PySide6.QtQml import QQmlApplicationEngine, QQmlComponent
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtNetwork import QSslSocket
 from PySide6.QtCore import QCoreApplication, QMetaObject, Q_ARG, QTimer, QObject
 from PySide6 import QtPositioning
 import uav
-from gcs.gcs import GCS
+from gcs.GCS import GCS
 from gcs.MissionModel import MissionModel
 
 IS_TEST = False
@@ -101,18 +101,15 @@ if __name__ == "__main__":
     engine.rootContext().setContextProperty("supportsSsl",
                                             QSslSocket.supportsSsl())
     engine.addImportPath(Path(__file__).parent)
-    engine.loadFromModule("MapViewer", "Main")
+    qml_component = QQmlComponent(engine)
+    qml_component.loadFromModule("MapViewer", "Main")
     engine.quit.connect(QCoreApplication.quit)
 
-    items = engine.rootObjects()
-    if not items:
-        sys.exit(-1)
-
-    root_item = items[0]
-    gcs = GCS(root_item)
-    QMetaObject.invokeMethod(root_item, "initializeProviders",
+    qml_main = qml_component.create()
+    gcs = GCS(qml_main)
+    QMetaObject.invokeMethod(qml_main, "initializeProviders",
                              Q_ARG("QVariant", parameters))
-    root_item.setProperty('uav', uv)
+    qml_component.setProperty('uav', uv)
 
     stopEvent = threading.Event()
     thread = threading.Thread(target=run_tcp_client, args=(stopEvent, HOST, PORT, uv))
