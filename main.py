@@ -5,53 +5,17 @@
 
 import os
 import sys
-import socket
-import mavlink
-import threading
-import random
 from pathlib import Path
 from PySide6.QtQml import QQmlApplicationEngine, QQmlComponent
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtNetwork import QSslSocket
-from PySide6.QtCore import QCoreApplication, QMetaObject, Q_ARG, QTimer, QObject
-from PySide6 import QtPositioning
-import uav
+from PySide6.QtCore import QCoreApplication, QMetaObject, Q_ARG
 from gcs.GCS import GCS
-from gcs.MissionModel import MissionModel
 
 IS_TEST = False
-HOST = '127.0.0.1'
-PORT = 5760
-BUFFER_SIZE = 1024
-SYS_ID = 255
 APP_NAME = 'GCS'
 HELP = '''Usage:
 plugin.<parameter_name> <parameter_value> - Sets parameter = value for plugin'''
-
-def run_tcp_client(stopEvent: threading.Event, host: str, port: int, uv: uav.Uav):
-    mav = mavlink.MAVLink(None, SYS_ID, mavlink.MAV_COMP_ID_MISSIONPLANNER)
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
-        try:
-            client_socket.connect((host, port))
-            print(f"Connected to {host}:{port}. Reading data continuously...")
-            while not stopEvent.is_set():
-                data = client_socket.recv(BUFFER_SIZE)
-                if not data:
-                    print("Server closed the connection.")
-                    break
-                # print(f"Received: {data}")
-
-                msg = mav.parse_char(data)
-                if msg:
-                    # print(f'MSG: id = {msg.get_msgId()} SYS_ID = {msg.get_srcSystem()} COMP_ID = {msg.get_srcComponent()}')
-                    match msg.get_msgId():
-                        case mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION_INT:
-                            uv.setPos(QtPositioning.QGeoCoordinate(msg.lat / 10e7, msg.lon / 10e7, msg.alt / 1000))
-
-        except KeyboardInterrupt:
-            print("\nClient stopped by user.")
-        except socket.error as e:
-            print(f"Socket error occurred: {e}")
 
 def parseArgs(args: list[str]) -> dict[str, bool | str]:
     parameters: dict[str, bool | str] = {}
@@ -93,9 +57,7 @@ if __name__ == "__main__":
     parameters = parseArgs(args)
     if not parameters.get("osm.useragent"):
         parameters["osm.useragent"] = APP_NAME
-    IS_TEST = '--test' in parameters
-
-    uv = uav.Uav()
+    # IS_TEST = '--test' in parameters
 
     engine = QQmlApplicationEngine()
     engine.rootContext().setContextProperty("supportsSsl",
@@ -109,30 +71,24 @@ if __name__ == "__main__":
     gcs = GCS(qml_main)
     QMetaObject.invokeMethod(qml_main, "initializeProviders",
                              Q_ARG("QVariant", parameters))
-    qml_component.setProperty('uav', uv)
 
-    stopEvent = threading.Event()
-    thread = threading.Thread(target=run_tcp_client, args=(stopEvent, HOST, PORT, uv))
-    thread.start()
+    # if IS_TEST:
+    #     def updatePos():
+    #         currPos = uv.pos()
+    #         uv.setPos(
+    #             QtPositioning.QGeoCoordinate(
+    #                 currPos.latitude() + random.uniform(-0.0001, 0.0001),
+    #                 currPos.longitude() + random.uniform(-0.0001, 0.0001),
+    #                 currPos.altitude() + random.uniform(-2, 2)
+    #             )
+    #         )
 
-    if IS_TEST:
-        def updatePos():
-            currPos = uv.pos()
-            uv.setPos(
-                QtPositioning.QGeoCoordinate(
-                    currPos.latitude() + random.uniform(-0.0001, 0.0001),
-                    currPos.longitude() + random.uniform(-0.0001, 0.0001),
-                    currPos.altitude() + random.uniform(-2, 2)
-                )
-            )
-
-        pos_update_timer = QTimer()
-        pos_update_timer.setInterval(1000)
-        pos_update_timer.timeout.connect(updatePos)
-        pos_update_timer.start()
+    #     pos_update_timer = QTimer()
+    #     pos_update_timer.setInterval(1000)
+    #     pos_update_timer.timeout.connect(updatePos)
+    #     pos_update_timer.start()
 
     exit_code = application.exec()
+    del gcs
     del engine
-    stopEvent.set()
-    thread.join()
     sys.exit(exit_code)

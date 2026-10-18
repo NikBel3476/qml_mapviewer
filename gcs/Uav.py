@@ -1,4 +1,4 @@
-from PySide6.QtCore import QObject, Property, Signal, Slot
+from PySide6.QtCore import QObject, Property, Signal
 from PySide6.QtQml import QmlElement
 from PySide6 import QtPositioning
 

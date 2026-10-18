@@ -1,8 +1,6 @@
-from PySide6.QtCore import QAbstractListModel, QByteArray, QModelIndex, QPersistentModelIndex, Qt, Slot, QObject, Signal
+from PySide6.QtCore import Slot, QObject, Signal
 from PySide6.QtQml import QmlElement
 from PySide6.QtPositioning import QGeoCoordinate
-from PySide6 import QtPositioning
-from typing import Optional, Any
 from gcs.MissionItem import MissionItem
 
 QML_IMPORT_NAME = 'MissionModel'
